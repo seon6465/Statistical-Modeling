@@ -1,0 +1,250 @@
+---
+title: "w02-hw-syang118"
+author: "Seonhye Yang, NetID: syang118"
+date: "5/26/2019"
+output: html_document
+---
+
+```{r}
+library(MASS)
+```
+
+##Exercise 1 (Using lm)
+```{r}
+#a
+cat_model <- lm(Hwt~Bwt, data = cats)
+summary(cat_model)
+```
+
+```{r}
+#b
+```
+$\hat{\beta}_0 = -0.3567$ and $\hat{\beta_1} = 4.0341$. As body weight increases by one unit, heart weight increases by 4.0341 grams.
+
+```{r}
+#c
+predict(cat_model, data.frame(Bwt = 2.7))
+#We get a prediction of 10.53531 grams and we are quite confident in our prediction because 2.7 ranges within the data cats.  
+```
+
+```{r}
+#d
+predict(cat_model, data.frame(Bwt = 4.4))
+#Unlike the problem above, this prediction, 17.39321, is not as confident because body weight 4.4kg is outside of the data range. 
+```
+
+```{r}
+#e
+plot(Hwt~Bwt,data = cats, main = "Heart weight vs Body Weight", xlab = "Body weight", ylab = "Heart weight")
+abline(lm(Hwt~Bwt, data = cats), col = "red", )
+```
+
+```{r}
+#f
+summary(cat_model)$r.squared
+```
+R-squared = 0.6466 which indicates that 64.66% of the observed variation in heart weight is explained by the linear relationship.
+
+##Exercise 2 (Writing Functions)
+```{r}
+#a
+get_sd_est = function(fitted_vals, actual_vals, mle = F) 
+  {
+n = length(fitted_vals) - 2 * isFALSE(mle) #-2 is for the degree of freedom
+sqrt(sum((actual_vals - fitted_vals)^2)*1/n) #This indicates the RMSE
+}
+
+```
+
+```{r}
+#b
+get_sd_est(fitted_vals = fitted(cat_model), actual_vals = cats$Hwt)
+```
+We get a standard error of 1.452373 which means when estimating the cat's heart weight, the weight will be off by 1.452373g. 
+
+```{r}
+#c
+get_sd_est(fitted_vals = fitted(cat_model), actual_vals = cats$Hwt, mle = T)
+```
+We get a standard deviation of 1.442252 which means when estimating the cat's heart weight, the weight will be off by 1.442252g. 
+
+```{r}
+summary(cat_model)$sigma
+```
+The value is the same as the output from question c, the standard error. 
+
+##Exercise 3 (Simulating SLR)
+```{r}
+birthday = 18760613 
+set.seed(birthday)
+
+#a
+x = runif(n = 25, 0, 10)
+
+sim_slr = function(x, beta_0 = 10, beta_1 = 5, sigma = 1) {
+  n = length(x)
+  epsilon = rnorm(n, mean = 0, sd = sigma)
+  y = beta_0 + beta_1 * x + epsilon
+  data.frame(predictor = x, response = y)
+}
+
+set.seed(1)
+sim_data = sim_slr(x = x, beta_0 = 5, beta_1 = -3, sigma = sqrt(10.24))
+```
+
+```{r}
+#b
+model_sim <- lm(sim_data$response~sim_data$predictor)
+summary(model_sim)
+```
+Here we get an intercept $\beta_0 = 4.9451$ and slope $\beta_1 = -2.8732$. The values we got are somewhat close to the original intercept (5) and slope (-3) respectively. 
+
+```{r}
+plot(sim_data, 
+     main = "Simulated Regression Data", 
+     xlab = "Simulated Predictor", 
+     ylab = "Simulated Response", 
+     pch = 20,
+     cex = 1.5,
+     col = "black")
+abline(model_sim,
+       lwd = 3,
+       lty = 1,
+       col = "grey")
+abline(5, -3,
+       lwd = 3,
+       lty = 3,
+       col = "dodgerblue")
+legend("bottomleft", c("Fitted", "Actual"), lwd = 2, lty = c(1, 2),
+col = c("grey", "dodgerblue"))
+```
+
+```{r}
+#d
+beta_hat_1 = rep(0, 1500)
+for (i in seq(beta_hat_1)) 
+{sim_data = sim_slr(x, beta_0 = 5, beta_1 = -3, sigma = sqrt(10.24))
+model_sim <- lm(sim_data$response~sim_data$predictor)
+beta_hat_1[i] = model_sim$coefficients[2]}
+```
+
+```{r}
+#e
+mean(beta_hat_1)
+sd(beta_hat_1)
+```
+We have mean = -3.007917 and sd = 0.2564772. The mean looks famillar because -3.007917 is close to 3. 
+
+```{r}
+hist(beta_hat_1,
+     main = "Histogram of beta_hat_1", 
+     xlab = "beta_hat_1", 
+     col = "pink")
+```
+The histogram represents somewhat a normal distribution with $\mu = -3$
+
+##Exercise 4 (Be a Skeptic)
+```{r}
+#a
+birthday = 18760613
+set.seed(birthday)
+
+x = runif(n = 75, 0, 10)
+
+beta_hat_1 = rep(0, 2500)
+for (i in seq(beta_hat_1)) 
+{sim_data = sim_slr(x = x, beta_0 = 3, beta_1 = 0, sigma = sqrt(4))
+model_sim_1 <- lm(sim_data$response~sim_data$predictor)
+beta_hat_1[i] = model_sim_1$coefficients[2]}
+```
+
+```{r}
+#b
+hist(beta_hat_1,
+     main = "Histogram of beta_hat_1", 
+     xlab = "beta_hat_1", 
+     col = "light blue")
+```
+The histogram represents somewhat a normal distribution with $\mu = 0$
+
+```{r}
+#c
+skeptic <- read.csv("~/Desktop/w02-hw-syang118/skeptic.csv")
+lm(response~predictor, data = skeptic)
+```
+
+```{r}
+set.seed(100)
+x = runif(n = 75, 0, 10)
+skeptics = sim_slr(x, beta_0 = 3.15, beta_1 = -0.22, sigma = 1)
+skeptic_model = lm(skeptic$response ~ skeptic$predictor)
+skeptic_model$coefficients
+```
+We get a predictor value of -0.2221927. 
+
+```{r}
+#d
+hist(beta_hat_1,
+     main = "Histogram of beta_hat_1", 
+     xlab = "beta_hat_1", 
+     col = "light blue")
+abline(v = skeptic_model$coefficients[2], lwd = 3, col = "red")
+```
+
+```{r}
+#e
+value<-beta_hat_1 < skeptic_model$coefficients[2]
+mean(value)
+#0.0052 of the portion is smaller than our beta_hat_1.
+2*mean(value)
+#0.0104 is when we multiply by 2 and mean(value) 
+```
+
+```{r}
+#f
+#We can look at the ranges of beta_hat_1 
+range(beta_hat_1)
+```
+Beta_hat_1 ranges from -0.3596241 to 0.3022105. Although our predictor = -0.222 is within the range of beta_hat_1, there's a low probablity that skeptics.csv data could have been generated by the model given above. This is because if we look at the output from question $e$, $0.0052$ or $0.52%$ of the simulated values are smaller than our predictor = -0.222. In conclusion it's possible that it was generated by the simulation but low probablity. 
+
+##Exercise 5
+```{r}
+library(mlbench)
+data(Ozone, package = "mlbench")
+Ozone = Ozone[, c(4, 6, 7, 8)]
+colnames(Ozone) = c("ozone", "wind", "humidity", "temp") 
+Ozone = Ozone[complete.cases(Ozone), ]
+```
+
+```{r}
+#a
+attach(Ozone, warn.conflicts = F)
+#models
+slr_wind <- lm(ozone~wind)
+slr_humidity <- lm(ozone~humidity)
+slr_temp <- lm(ozone~temp)
+
+#Calculating RMSE and R^2
+RMSE = function(list_of_slr){
+  sqrt(mean(residuals(list_of_slr)^2))}
+
+r_2 = function(list_of_slr) {summary(list_of_slr)$r.squared}
+
+list_of_slr = list(slr_wind, slr_humidity, slr_temp)
+
+cbind(lapply(list_of_slr, RMSE))
+cbind(lapply(list_of_slr, r_2))
+```
+
+```{r}
+#b
+library(knitr)
+output <- data.frame(
+  Predictors = c("Wind", "Humidity", "Temperature"),
+  RMSE = cbind(lapply(list_of_slr, RMSE)),
+  r_2 = cbind(lapply(list_of_slr, r_2)))
+kable(head(output), caption = "table of models")
+#According to the table, temperature is the best predictor because it has the lowest RMSE
+```
+ 
+

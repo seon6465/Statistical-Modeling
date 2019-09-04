@@ -1,0 +1,140 @@
+---
+title: "stat 420 hw1"
+author: "Seonhye"
+date: "5/21/2019"
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+```
+
+##Exercise 1
+```{r}
+#b
+msleep
+nrow(msleep)
+ncol(msleep)
+
+#there are 83 observations and 11 variables. The obsecations are an updated and expanded version of mammals sleep dataset. It contains sleep times and weights taken from V. M. Savage and G. B. West.
+
+#c
+mean(msleep$sleep_rem, na.rm = T)
+#the mean hours of REM sleep is 1.87541
+
+#d
+sd(msleep$brainwt, na.rm = T)
+#the standard deviation fof brain weight is 0.9764137
+
+#e
+msleep[which.max(msleep$sleep_rem),]
+#Thick-tailed opposum gets the most REM sleep
+
+#f
+carni<-msleep[msleep$vore == "carni",]
+mean(carni$bodywt, na.rm = T)
+#the average body weight of carnivores is 90.75111
+```
+
+##Exercise 2
+```{r}
+library(MASS)
+```
+
+```{r}
+#a
+birthwt
+nrow(birthwt)
+ncol(birthwt)
+
+#there are 189 observations and 10 variables. The observations are Risk Factors Associated with Low Infant Birth Weight. It contains data that were collected at Baystate Medical Center, Springfield, Mass during 1986.
+
+#b
+plot(bwt~lwt, data = birthwt, col = "blue", main = "Mother's weight vs Baby's weight",  xlab = "Mother's weight", ylab = "Baby's weight")
+
+cor(birthwt$bwt, birthwt$lwt)
+#Looking at the correlation (r = 0.1857333), there seems to be no relationship between birth weight and mother's weight. 
+
+#c
+plot(bwt~age, data = birthwt, col = "red", main = "Mother's age vs Baby's weight", xlab = "Mother's age", ylab = "Baby's weight")
+cor(birthwt$bwt, birthwt$age)
+#Looking at the correlation (r = 0.09031781), there seems to be no relationship between birth weight and mother's age.
+
+#d
+boxplot(bwt~smoke, data = birthwt, col = "orange", main = "Smoking during Pregnancy and baby's birth weight", xlab = "Smoking during pregnancy (0 = no and 1 = yes", ylab = "Birth weight")
+
+#We can see that mothers who smoked during pregnancy gave birth to babies that weigh less (average) compared to that of mothers that didn't smoke during pregnancy. We can also see that the heaviest baby was birthed by a mother who didn't smoke. 
+```
+
+##Exercise 3
+```{r}
+nutrition <- read.csv("Downloads/w01-hw/nutrition-2018.csv")
+hist(nutrition$Calories, main = "Bar graph of Calories", xlab = "Calories", ylab = "frequency", col = "grey")
+#The histogram is skewed which means most of the values are on the left side. People consume less calories. 
+
+#b
+plot(Calories~Protein, data = nutrition, col = "blue", main = "Calories vs Protein", xlab = "Calories", ylab = "Protein")
+cor(nutrition$Calories, nutrition$Protein)
+#There's a correlation of 0.11 which is weak so we wouldn't be able to make a confident prediction. But if we had to guess, we can say that protein has low calories. 
+
+plot(Calories~ I(4*Protein + 4*Carbs + 9*Fat), data = nutrition, main = "Calories vs 4*Protein + 4*Carbs + 9*Fat", xlab = "Protein, Carbs and Fat", ylab = "Calories")
+
+#Here we can see that there's a strong positive correlation between protein, carbs and fat. Possibly because not all foods have accurate amounts of protein, carbs and fat based on the number of calories.
+```
+
+##Exercise 4
+```{r}
+#a
+a = 1:10
+b = 10:1
+c = rep(1, times = 10) 
+d = 2 ^ (1:10)
+
+sum_of_squares <- function(x){sum(x^2)}
+
+sum_of_squares(x=a)
+sum_of_squares(x=c(c, d))
+
+#b
+func <- function(x){
+  sqrt(mean(sum_of_squares(x - 0)))
+}
+func(x=d)
+
+#c
+func <- function(x, y){
+  sqrt(mean(sum_of_squares(x - y)))
+}
+func(x=a,y=b)
+```
+
+##Exercise 5
+```{r}
+set.seed(42)
+x = 1:100
+y = rnorm(1000)
+z = runif(150, min = 0, max = 1)
+
+list_extreme_values <- function(x, k=2) {
+  small <- c()
+  large <- c()
+  sdev <- sd(x)
+  mval <- mean(x)
+  for (v in x) {
+    if (v < (mval - (sdev * k))) {
+      small <- c(small, v)
+    }
+    if (v > (mval + (sdev *k))) {
+      large <- c(large, v)
+    }
+  }
+  return(list(small = small, large = large))
+}
+list_extreme_values(x = x, k = 1)
+list_extreme_values(x = y, k = 3)
+list_extreme_values(x = y, k = 2)
+list_extreme_values(x = z, k = 1.5)
+#b
+vals <- list_extreme_values(x = y, k = 1.5)
+mean(vals$large)
+```
